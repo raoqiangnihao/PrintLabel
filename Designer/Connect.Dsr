@@ -66,7 +66,9 @@ Public Sub UIImportSample(control As IRibbonControl)
         Set wkSht = Nothing
         Exit Sub
     End If
-    
+    If Not gBk Is Nothing Then
+        Set gBk = Nothing
+    End If
     Set gBk = ExcelApp.ActiveWorkbook
     If Not gShtScan Is Nothing Then
         Set gShtScan = Nothing

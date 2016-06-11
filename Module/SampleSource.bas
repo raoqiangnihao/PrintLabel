@@ -9,6 +9,10 @@ Private Const ROW_SCANNED As Long = 6
 Sub Sample_Init()
     Call InitANewSht(gBk, SHT_SAMPLE, True)
 End Sub
+
+'函数名称：Sample_ImportData
+'功能描述：导入样本
+'返回值：true导入成功
 Public Function Sample_ImportData() As Boolean
     Dim Paths
     Paths = GetOpenFiles
@@ -67,6 +71,10 @@ Public Function Sample_ImportData() As Boolean
     Set ShtDst = Nothing
     Call gShtScan.SetValidation(Paths)
 End Function
+
+'功能描述：获取正在处理的工作簿已经扫描结果
+'参数说明：无
+'返回值：为空则没有结果，不为空但是不是数组则只有一条结果，是数组则有多条结果，二维数组
 Public Function Sample_GetScannedCode()
     Dim wkSht As Worksheet
     Dim CurCol As Long, LstRow As Long, CurRow As Long
@@ -81,6 +89,11 @@ Public Function Sample_GetScannedCode()
     Set wkSht = Nothing
     Sample_GetScannedCode = arrRet
 End Function
+
+'功能描述：添加扫描结果
+'参数说明：
+'       str 需要添加的条码
+'返回值：true当前条码添加成功，false添加失败
 Public Function Sample_AddScanResult(str As String) As Boolean
     Dim bRet As Boolean
     Dim wkSht As Worksheet
@@ -144,10 +157,18 @@ Public Function Sample_AddScanResult(str As String) As Boolean
             End If
         End If
     End If
+    bRet = True
 LineEnd:
+    Sample_AddScanResult = bRet
     Set wkSht = Nothing
 End Function
 
+'功能描述：设置当前条码的状态，并判断整个工作簿是否扫描完成
+'参数说明：
+'   wkSht   需要处理的工作表
+'   str     需要处理的条码
+'   nCol    条码所在的列号
+'返回值：true扫描完成，false没有完成
 Private Function CheckFinished(wkSht As Worksheet, str As String, ByVal nCol As Long) As Boolean
     Dim Rng As Range
     Dim CurCol As Long, LstRow As Long
@@ -168,6 +189,13 @@ Private Function CheckFinished(wkSht As Worksheet, str As String, ByVal nCol As 
         Set Rng = Nothing
     End If
 End Function
+
+'功能描述：获取需要打印的条码
+'参数说明：
+'   wkSht   需要处理的工作表
+'   LstRow  条码所在列的最后一个不为空的单元格行号
+'   nCol    条码所在的列号
+'返回值：一个二维数组，如果没有需要显示的，则为空，不是数组
 Private Function GetDisCode(wkSht As Worksheet, LstRow As Long, nCol As Long)
     Dim nRow As Long
     Dim str As String
@@ -190,6 +218,13 @@ Private Function GetDisCode(wkSht As Worksheet, LstRow As Long, nCol As Long)
     End If
     GetDisCode = arrRet
 End Function
+
+'功能描述：获取需要打印的标签
+'参数说明：
+'   arr     条码数组
+'   wkSht   处理的工作表
+'   nCol    条码所在的列号
+'返回值：一维数组
 Private Function GetDisLabel(arr, wkSht As Worksheet, nCol As Long)
     Dim arrRet, str As String
     Dim i As Long
@@ -205,6 +240,13 @@ Private Function GetDisLabel(arr, wkSht As Worksheet, nCol As Long)
     Next
     GetDisLabel = arrRet
 End Function
+
+'功能描述：判断指定列中条码是否存在
+'参数说明：
+'   wkSht   处理的工作表
+'   strCode 条码
+'   nCol    判断的列号
+'返回值：true指定列存在指定的条码
 Private Function ScanCodeIsExist(wkSht As Worksheet, strCode As String, nCol As Long) As Boolean
     Dim Rng As Range
     Dim bRet As Boolean
@@ -217,6 +259,11 @@ Private Function ScanCodeIsExist(wkSht As Worksheet, strCode As String, nCol As 
     Set Rng = Nothing
     ScanCodeIsExist = bRet
 End Function
+
+'功能描述：获取当前正在处理的工作簿扫描结果所在的列号
+'参数说明：
+'   wkSht   处理的工作表
+'返回值：当前正在扫描的工作簿的结果所在的起始列号
 Private Function GetCurHandleCol(wkSht As Worksheet)
     Dim CurHandle As String
     Dim Rng As Range
