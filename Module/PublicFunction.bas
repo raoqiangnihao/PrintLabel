@@ -4,6 +4,17 @@ Public Function VPP(ByRef value As Long) As Long
     VPP = value
     value = value + 1
 End Function
+Public Function BkIsOpen(bkName As String) As Boolean
+    Dim wkBk As Workbook
+    BkIsOpen = False
+    For Each wkBk In ExcelApp.Workbooks
+        If wkBk.Name = bkName Then
+            BkIsOpen = True
+            Exit For
+        End If
+    Next
+    Set wkBk = Nothing
+End Function
 Public Function HasSht(wkBk As Workbook, ByVal shtName As String) As Boolean
     Dim wkSht As Worksheet
     Dim bRet As Boolean

@@ -17,7 +17,7 @@ Public Function Sample_ImportData() As Boolean
     Dim Paths
     Paths = GetOpenFiles
     If Not IsArray(Paths) Then
-        Sample_ImportData = False
+        Sample_ImportData = False '没有选择任何工作簿，则提示导入失败
         Exit Function
     End If
     Sample_ImportData = True
@@ -26,7 +26,7 @@ Public Function Sample_ImportData() As Boolean
     Dim i As Long, strPath As String, symbol As String, str As String
     Dim ShtSrc As Worksheet, ShtDst As Worksheet
     Dim Rng As Range
-    Dim nCol As Long, nRow As Long, CurCol As Long, CurRow As Long, LstRow As Long
+    Dim nCol As Long, nRow As Long, CurCol As Long, curRow As Long, LstRow As Long
     symbol = "正面条码"
     Set ShtDst = gBk.Worksheets(SHT_SAMPLE)
     CurCol = 1
@@ -36,29 +36,36 @@ Public Function Sample_ImportData() As Boolean
         For Each ShtSrc In wkBk.Worksheets
             Set Rng = ShtSrc.Rows(4).Find(What:=symbol, LookAt:=xlWhole)
             If Not Rng Is Nothing Then
-                CurRow = 1
-                ShtDst.Cells(VPP(CurRow), CurCol) = wkBk.Name
-                ShtDst.Cells(CurRow, CurCol) = "订单编号："
-                ShtDst.Cells(VPP(CurRow), CurCol + 1) = ShtSrc.Cells(2, "B")
-                ShtDst.Cells(CurRow, CurCol) = "经销店面："
-                ShtDst.Cells(VPP(CurRow), CurCol + 1) = ShtSrc.Cells(3, "B")
-                ShtDst.Cells(CurRow, CurCol) = "产品类别："
+                curRow = 1
+                ShtDst.Cells(VPP(curRow), CurCol) = wkBk.Name
+                ShtDst.Cells(curRow, CurCol) = "订单编号："
+                ShtDst.Cells(VPP(curRow), CurCol + 1) = ShtSrc.Cells(2, "B")
+                ShtDst.Cells(curRow, CurCol) = "经销店面："
+                ShtDst.Cells(VPP(curRow), CurCol + 1) = ShtSrc.Cells(3, "B")
+                ShtDst.Cells(curRow, CurCol) = "产品类别："
                 str = ShtSrc.Cells(3, "K")
-                ShtDst.Cells(VPP(CurRow), CurCol + 1) = Trim(IIf(Len(str) > 5, Right(str, Len(str) - 5), str))
-                ShtDst.Cells(CurRow, CurCol + 0) = "扫描订单"
-                ShtDst.Cells(CurRow, CurCol + 1) = "样板名称"
-                ShtDst.Cells(CurRow, CurCol + 2) = "是否扫描"
-                ShtDst.Cells(CurRow, CurCol + 3) = "已经扫描"
-                ShtDst.Cells(CurRow + 1, CurCol + 3) = SYMBOL_END
-                Call VPP(CurRow)
+                ShtDst.Cells(VPP(curRow), CurCol + 1) = Trim(IIf(Len(str) > 5, Right(str, Len(str) - 5), str))
+                ShtDst.Cells(curRow, CurCol + 0) = "正面条码"
+                ShtDst.Cells(curRow, CurCol + 1) = "样板名称"
+                ShtDst.Cells(curRow, CurCol + 2) = "是否扫描"
+                ShtDst.Cells(curRow, CurCol + 3) = "已经扫描"
+                ShtDst.Cells(curRow + 1, CurCol + 3) = SYMBOL_END
+                Call VPP(curRow)
                 nCol = Rng.Column
                 
                 LstRow = ShtSrc.Cells(ShtSrc.Rows.count, nCol).End(xlUp).Row
                 For nRow = Rng.Row + 1 To LstRow
-                    ShtDst.Cells(CurRow, CurCol) = ShtSrc.Cells(nRow, nCol)
-                    ShtDst.Cells(CurRow, CurCol + 1) = ShtSrc.Cells(nRow, 1)
-                    Call VPP(CurRow)
+                    str = ShtSrc.Cells(nRow, 1)
+                    If InStr(str, "小计") > 0 And ShtSrc.Cells(nRow, 1).MergeCells Then
+                        '如果遇到小计，就退出
+                        Exit For
+                    End If
+                    ShtDst.Cells(curRow, CurCol) = ShtSrc.Cells(nRow, nCol)
+                    ShtDst.Cells(curRow, CurCol + 1) = ShtSrc.Cells(nRow, 1)
+                    Call VPP(curRow)
                 Next
+                ShtDst.Columns(CurCol).ColumnWidth = COL_WIDTH_CODE
+                ShtDst.Columns(CurCol + 1).AutoFit
                 CurCol = CurCol + COl_DEPART
             End If
             Set Rng = Nothing
@@ -67,7 +74,7 @@ Public Function Sample_ImportData() As Boolean
         Set ShtSrc = Nothing
         Set wkBk = Nothing
     Next
-    ShtDst.Columns.AutoFit
+    'ShtDst.Columns.AutoFit
     Set ShtDst = Nothing
     Call gShtScan.SetValidation(Paths)
 End Function
@@ -77,14 +84,14 @@ End Function
 '返回值：为空则没有结果，不为空但是不是数组则只有一条结果，是数组则有多条结果，二维数组
 Public Function Sample_GetScannedCode()
     Dim wkSht As Worksheet
-    Dim CurCol As Long, LstRow As Long, CurRow As Long
+    Dim CurCol As Long, LstRow As Long, curRow As Long
     Dim arrRet
     Set wkSht = gBk.Worksheets(SHT_SAMPLE)
     CurCol = GetCurHandleCol(wkSht)
     LstRow = wkSht.Cells(wkSht.Rows.count, CurCol + COL_SCANNED).End(xlUp).Row
-    CurRow = ROW_SCANNED + 1
+    curRow = ROW_SCANNED + 1
     If LstRow > ROW_SCANNED Then
-        arrRet = wkSht.Cells(CurRow, CurCol + COL_SCANNED).Resize(LstRow - CurRow + 1, 1)
+        arrRet = wkSht.Cells(curRow, CurCol + COL_SCANNED).Resize(LstRow - curRow + 1, 1)
     End If
     Set wkSht = Nothing
     Sample_GetScannedCode = arrRet
@@ -116,7 +123,7 @@ Public Function Sample_AddScanResult(str As String) As Boolean
         End If
         '检测是否已经扫描过了
         If ScanCodeIsExist(wkSht, str, ScanCol) Then
-            MsgBox "已经扫描过当前条码，请扫描其他的条码"
+            ShowMsg "已经扫描过当前条码，请扫描其他的条码"
             bRet = False
             GoTo LineEnd
         End If
@@ -146,12 +153,14 @@ Public Function Sample_AddScanResult(str As String) As Boolean
     If bPrint Then
         Dim ArrLabel
         Dim LabelCount As Long
+        '如果需要打印标签则打印标签
         ArrLabel = GetDisCode(wkSht, LstRow, ScanCol)
         If IsArray(ArrLabel) Then
             ArrLabel = GetDisLabel(ArrLabel, wkSht, CurCol)
-            LabelCount = UBound(ArrLabel) - LBound(ArrLabel) + 1
+            LabelCount = GetLableCount(wkSht, ScanCol)
             Call Label_Print(ArrLabel)
             If bFinished Then
+                '如果工作簿扫描完成，则打印最终的完成标签
                 ArrLabel = wkSht.Cells(2, CurCol).Resize(3, 2)
                 Call Label_PrintFinish(ArrLabel, LabelCount)
             End If
@@ -239,6 +248,24 @@ Private Function GetDisLabel(arr, wkSht As Worksheet, nCol As Long)
         End If
     Next
     GetDisLabel = arrRet
+End Function
+
+'功能描述：返回当前的扫描个数
+'参数说明：
+'   wkSht   所在工作表
+'   nCol    条码所在的列号
+'返回值：有效条码个数
+Private Function GetLableCount(wkSht As Worksheet, nCol As Long) As Long
+    Dim LstRow As Long, nRow As Long
+    Dim count As Long
+    count = 0
+    LstRow = wkSht.Cells(wkSht.Rows.count, nCol).End(xlUp).Row
+    For nRow = ROW_SCANNED To LstRow
+        If wkSht.Cells(nRow, nCol) <> SYMBOL_END Then
+            VPP count
+        End If
+    Next
+    GetLableCount = count
 End Function
 
 '功能描述：判断指定列中条码是否存在

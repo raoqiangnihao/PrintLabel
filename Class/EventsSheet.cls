@@ -47,7 +47,9 @@ Public Sub SetValidation(arrPaths)
     Rng.Validation.Add xlValidateList, xlValidAlertStop, xlBetween, str
     Rng = Dir(arrPaths(LBound(arrPaths)))
     Rng.Offset(0, -1) = "当前处理工作簿"
-    EventSheet.Columns.AutoFit
+    EventSheet.Columns(1).ColumnWidth = COL_WIDTH_CODE
+    'EventSheet.Columns(1).HorizontalAlignment = xlCenter
+    EventSheet.Columns(2).AutoFit
     ExcelApp.EnableEvents = True
 End Sub
 
@@ -103,8 +105,10 @@ Private Sub EventSheet_Change(ByVal Target As Excel.Range)
     
     If IsScanning Then
         If Target.Cells.count = 1 Then
-            If Not Sample_AddScanResult(Target.value) Then
-                Target.ClearContents
+            If Trim(Target.value) <> "" Then
+                If Not Sample_AddScanResult(Target.value) Then
+                    Target.ClearContents
+                End If
             End If
         End If
     End If

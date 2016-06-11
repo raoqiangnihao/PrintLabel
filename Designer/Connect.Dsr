@@ -1,11 +1,11 @@
 VERSION 5.00
 Begin {AC0714F6-3D04-11D1-AE7D-00A0C90F26F4} Connect 
-   ClientHeight    =   7965
+   ClientHeight    =   10215
    ClientLeft      =   1740
    ClientTop       =   1545
-   ClientWidth     =   6585
-   _ExtentX        =   11615
-   _ExtentY        =   14049
+   ClientWidth     =   15300
+   _ExtentX        =   26988
+   _ExtentY        =   18018
    _Version        =   393216
    Description     =   "Add-In Project Template"
    DisplayName     =   "My Add-In"
