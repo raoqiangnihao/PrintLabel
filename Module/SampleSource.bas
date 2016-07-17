@@ -3,12 +3,12 @@ Option Explicit
 Private Const SHT_SAMPLE As String = "src_sample"
 Private Const SYMBOL_END As String = "end"
 Private Const SYMBOL_OK As String = "ok"
-Private Const COl_DEPART As Long = 5
-Private Const COL_SCANNED As Long = 3
+Private Const COl_DEPART As Long = 6
+Private Const COL_SCANNED As Long = 4
 Private Const ROW_SCANNED As Long = 6
 
 Sub Sample_Init()
-    Call InitANewSht(gBk, SHT_SAMPLE, True)
+    Call InitANewSht(gBk, SHT_SAMPLE, False)
 End Sub
 
 '函数名称：Sample_ImportData
@@ -35,7 +35,7 @@ Public Function Sample_ImportData(Paths) As Boolean
         If Dir(strPath) <> "" Then
             Set wkBk = ExcelApp.Workbooks.Open(strPath)
             For Each ShtSrc In wkBk.Worksheets
-                Set Rng = ShtSrc.Rows(4).Find(What:=symbol, Lookat:=xlWhole)
+                Set Rng = ShtSrc.Rows(4).Find(what:=symbol, lookat:=xlWhole)
                 If Not Rng Is Nothing Then
                     curRow = 1
                     ShtDst.Cells(VPP(curRow), CurCol) = wkBk.Name
@@ -49,8 +49,9 @@ Public Function Sample_ImportData(Paths) As Boolean
                     ShtDst.Cells(curRow, CurCol + 0) = "正面条码"
                     ShtDst.Cells(curRow, CurCol + 1) = "样板名称"
                     ShtDst.Cells(curRow, CurCol + 2) = "是否扫描"
-                    ShtDst.Cells(curRow, CurCol + 3) = "已经扫描"
-                    ShtDst.Cells(curRow + 1, CurCol + 3) = SYMBOL_END
+                    ShtDst.Cells(curRow, CurCol + 3) = "第几包"
+                    ShtDst.Cells(curRow, CurCol + COL_SCANNED) = "扫描顺序"
+                    ShtDst.Cells(curRow + 1, CurCol + COL_SCANNED) = SYMBOL_END
                     Call VPP(curRow)
                     nCol = Rng.Column
                     
@@ -149,7 +150,7 @@ Public Function Sample_AddScanResult(ByVal str As String) As Boolean
     Else
         '如果不是end，需要检测是否扫描完
         If CheckFinished(wkSht, str, CurCol) Then
-            gShtScan.InitScanInfo
+            
             bPrint = True
             bFinished = True
             Call VPP(LstRow) '如果是扫描完成，则需要下移一行
@@ -161,6 +162,7 @@ Public Function Sample_AddScanResult(ByVal str As String) As Boolean
     End If
     If bPrint Then
         Call PrintAllLabel
+        gShtScan.InitScanInfo
     End If
     bRet = True
 LineEnd:
@@ -173,11 +175,12 @@ End Function
 '返回值：基本信息数组
 Public Function Sample_GetInfo()
     Dim wkSht As Worksheet
-    Dim CurCol As Long
+    Dim CurCol As Long, LstRow As Long
     Dim arr
     Set wkSht = gBk.Worksheets(SHT_SAMPLE)
     CurCol = GetCurHandleCol(wkSht)
-    arr = wkSht.Cells(2, CurCol).Resize(3, 3)
+    LstRow = Sht_GetLstRow(wkSht, CurCol, CurCol + COL_SCANNED)
+    arr = wkSht.Range(wkSht.Cells(2, CurCol), wkSht.Cells(LstRow, CurCol + 4))
     Sample_GetInfo = arr
     Set wkSht = Nothing
 End Function
@@ -192,7 +195,7 @@ Private Function CheckFinished(wkSht As Worksheet, str As String, ByVal nCol As 
     Dim Rng As Range
     Dim CurCol As Long, LstRow As Long
     CheckFinished = False
-    Set Rng = wkSht.Columns(nCol).Find(What:=str, Lookat:=xlWhole)
+    Set Rng = wkSht.Columns(nCol).Find(what:=str, lookat:=xlWhole)
     If Not Rng Is Nothing Then
         Rng.Offset(0, 2) = True
         LstRow = wkSht.Cells(wkSht.Rows.count, Rng.Column).End(xlUp).Row
@@ -225,7 +228,7 @@ Private Function GetDisCode(wkSht As Worksheet, nCol As Long)
     For nRow = LBound(arr, 1) To UBound(arr, 1)
         str = arr(nRow, 1)
         If VBA.LCase(str) <> SYMBOL_END Then
-            Set Rng = wkSht.Columns(nCol - COL_SCANNED).Find(What:=str, Lookat:=xlWhole)
+            Set Rng = wkSht.Columns(nCol - COL_SCANNED).Find(what:=str, lookat:=xlWhole)
             If Rng Is Nothing Then
                 arr(nRow, 2) = ""
             Else
@@ -249,7 +252,7 @@ Private Function GetDisLabel(arr, wkSht As Worksheet, nCol As Long)
     ReDim arrRet(LBound(arr, 1) To UBound(arr, 1))
     For i = LBound(arr, 1) To UBound(arr, 1)
         str = arr(i, LBound(arr, 2))
-        Set Rng = wkSht.Columns(nCol).Find(What:=str, Lookat:=xlWhole)
+        Set Rng = wkSht.Columns(nCol).Find(what:=str, lookat:=xlWhole)
         If Not Rng Is Nothing Then
             arrRet(i) = Rng.Offset(0, 1)
             Set Rng = Nothing
@@ -285,7 +288,7 @@ End Function
 Private Function ScanCodeIsExist(wkSht As Worksheet, strCode As String, nCol As Long) As Boolean
     Dim Rng As Range
     Dim bRet As Boolean
-    Set Rng = wkSht.Columns(nCol).Find(What:=strCode, Lookat:=xlWhole)
+    Set Rng = wkSht.Columns(nCol).Find(what:=strCode, lookat:=xlWhole)
     If Not Rng Is Nothing Then
         bRet = True
     Else
@@ -307,7 +310,7 @@ Private Function GetCurHandleCol(wkSht As Worksheet)
         GetCurHandleCol = 0
         Exit Function
     End If
-    Set Rng = wkSht.Rows(1).Find(What:=CurHandle, Lookat:=xlWhole)
+    Set Rng = wkSht.Rows(1).Find(what:=CurHandle, lookat:=xlWhole)
     If Not Rng Is Nothing Then
         GetCurHandleCol = Rng.Column
         Set Rng = Nothing
@@ -324,6 +327,7 @@ Private Sub PrintAllLabel()
     Dim index As Long, count As Long, ScanCol As Long, CurCol As Long
     Dim nRow As Long
     Dim wkSht As Worksheet
+    Dim Rng As Range
     
     Set wkSht = gBk.Worksheets(SHT_SAMPLE)
     CurCol = GetCurHandleCol(wkSht)
@@ -357,6 +361,11 @@ Private Sub PrintAllLabel()
             '否则添加
             arrCode(UBound(arrCode)) = str
             wkSht.Cells(ROW_SCANNED + nRow, ScanCol + 1) = "第" & index & "包"
+            Set Rng = wkSht.Columns.Find(what:=str, lookat:=xlWhole)
+            If Not Rng Is Nothing Then
+                Rng.Offset(0, 3) = "第" & index & "包"
+                Set Rng = Nothing
+            End If
             arrName(UBound(arrName)) = ArrLabel(nRow, LBound(ArrLabel, 2) + 1)
             ReDim Preserve arrCode(LBound(arrCode) To UBound(arrCode) + 1) As String
             ReDim Preserve arrName(LBound(arrName) To UBound(arrName) + 1) As String

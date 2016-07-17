@@ -45,7 +45,7 @@ Public Function GetRibbonXML() As String
                   "<ribbon startFromScratch=""false"">" & _
                    "<tabs>" & _
                     "<tab id=""tabPrintLabel"" label=""打印标签"">" & _
-                     "<group id=""grupPrintLabel"" label=""工具"">" & _
+                     "<group id=""grupPrintLabel"" label=""工具 V " & App.Major & "." & App.Minor & "." & App.Revision & """>" & _
                       "<button id=""btnImportSelSample"" label=""导入选择样本数据"" size=""large"" imageMso=""ExportMoreMenu"" onAction=""UIImportSelSample"" />" & _
                       "<button id=""btnImportFolderSample"" label=""导入文件夹样本数据"" size=""large"" imageMso=""SharePointListsWorkOffline"" onAction=""UIImportFolderSample"" />" & _
                       "<button id=""btnClearScan"" label=""清除扫描数据"" size=""large"" imageMso=""InkDeleteAllInk"" onAction=""UIClearScan"" />" & _

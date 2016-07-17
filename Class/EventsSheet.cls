@@ -13,6 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Private Const COL_CUR As Long = 2
 Private Const S_ROW As Long = 5
+Private Const COL_EVT As Long = 5
 Private WithEvents EventSheet As Excel.Worksheet
 Attribute EventSheet.VB_VarHelpID = -1
 
@@ -45,7 +46,7 @@ Public Sub SetValidation(arrPaths)
     Set Rng = EventSheet.Cells(1, COL_CUR)
     ExcelApp.EnableEvents = False
     Rng.Validation.Delete
-    Rng.Validation.Add xlValidateList, xlValidAlertStop, xlBetween, str
+    Rng.Validation.add xlValidateList, xlValidAlertStop, xlBetween, str
     Rng = Dir(arrPaths(LBound(arrPaths)))
     Rng.Offset(0, -1) = "当前处理工作簿"
     EventSheet.Columns(1).ColumnWidth = COL_WIDTH_CODE
@@ -84,39 +85,28 @@ Private Sub EventSheet_Change(ByVal Target As Excel.Range)
     '处理工作簿选择的事件
     If Target.Column = COL_CUR And Target.Row = 1 Then
         '如果选择的扫描工作簿，则将以前扫描的结果搬移过来
-        Dim wkSht As Worksheet
-        Dim RowCnt As Long, ColCnt As Long
-        Dim arr, Rng As Range
-        
-        Set wkSht = Target.Parent
         Call gShtScan.ScanInit
-        arr = Sample_GetScannedCode
-        If IsArray(arr) Then
-            '扫描多个
-            RowCnt = GerArrLen(arr, 1)
-            ColCnt = GerArrLen(arr, 2)
-            Set Rng = wkSht.Cells(S_ROW + 1, COL_CUR)
-            Rng.Resize(RowCnt, ColCnt) = arr '恢复之前扫描的结果
-        Else
-            If arr <> "" Then
-                RowCnt = 1
-                Set Rng = wkSht.Cells(S_ROW, COL_CUR)
-                Rng = arr '已经扫描了一个
-            Else
-                RowCnt = 0 '如果一个都没有扫描
-            End If
-        End If
         '写入相关信息
         Call InitScanInfo
-        Target.Offset(RowCnt + 1, -1).Select '选择下一个输入的位置
         GoTo LineEnd
     End If
     '如果是正在扫描则处理扫描的事件
     If IsScanning Then
         If Target.Cells.count = 1 Then
-            If Trim(Target.value) <> "" Then
-                If Not Sample_AddScanResult(Target.value) Then
-                    Target.ClearContents
+            If Target.Row > 5 And Target.Column = COL_EVT Then
+                If Trim(Target.value) <> "" Then
+                    If Not Sample_AddScanResult(Target.value) Then
+                        Target.ClearContents
+                    Else
+                        Dim Rng As Range
+                        Set Rng = EventSheet.Columns(1).Find(what:=Target.value, lookat:=xlWhole)
+                        If Not Rng Is Nothing Then
+                            Rng.Offset(0, 2) = True
+                            Set Rng = Nothing
+                        End If
+                    End If
+                    EventSheet.Columns(COL_EVT).AutoFit
+                    EventSheet.Columns(COL_EVT).HorizontalAlignment = xlCenter
                 End If
             End If
         End If
@@ -125,8 +115,8 @@ LineEnd:
     ExcelApp.EnableEvents = True
 End Sub
 '初始化扫描文件信息
-Private Sub InitScanInfo()
-    Dim arr, RowCnt As Long, ColCnt As Long
+Public Sub InitScanInfo()
+    Dim arr, RowCnt As Long, ColCnt As Long, LstRow As Long
     Dim EvtEnabled As Boolean
     EvtEnabled = ExcelApp.EnableEvents
     ExcelApp.EnableEvents = False
@@ -134,6 +124,11 @@ Private Sub InitScanInfo()
     RowCnt = GerArrLen(arr, 1)
     ColCnt = GerArrLen(arr, 2)
     EventSheet.Cells(2, 1).Resize(RowCnt, ColCnt) = arr
+    EventSheet.Cells(5, COL_EVT) = "开始扫描"
+    EventSheet.Columns(COL_EVT).AutoFit
+    EventSheet.Columns(COL_EVT).HorizontalAlignment = xlCenter
+    LstRow = Sht_GetLstRow(EventSheet, COL_EVT) + 1
+    EventSheet.Cells(LstRow, COL_EVT).Select
     ExcelApp.EnableEvents = EvtEnabled
 End Sub
 
