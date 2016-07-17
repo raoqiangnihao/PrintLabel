@@ -7,21 +7,64 @@ Sub Label_Init()
     Call InitANewSht(gBk, SHT_LABEL, True)
     Call SaveLstNum("")
 End Sub
-Sub Label_Print(arr)
+Sub Label_Print(arrName, Sn As String, index As Long, totalCount As Long)
     Dim wkSht As Worksheet
-    Dim curRow As Long, LstRow As Long, i As Long
+    Dim curRow As Long, LstRow As Long, i As Long, nCol As Long
     Dim str As String
+    nCol = 1
     Set wkSht = gBk.Worksheets(SHT_LABEL)
-    LstRow = wkSht.Cells(wkSht.Rows.count, 1).End(xlUp).Row
+    LstRow = Sht_GetLstRow(wkSht, nCol)
+    
+    LstRow = LstRow + IIf(index = 1, 5, 3)
+    
+    curRow = LstRow
 
-    curRow = IIf(LstRow = 1, LstRow, LstRow + 1)
-    str = GetNextNum
-    wkSht.Cells(curRow, 1) = ExcelApp.WorksheetFunction.Transpose(str)
-    Call VPP(curRow)
-    wkSht.Cells(curRow, 1).Resize(UBound(arr) - LBound(arr) + 1, 1) = ExcelApp.WorksheetFunction.Transpose(arr)
-    Call SaveLstNum(str)
-    wkSht.Columns(1).AutoFit
-    Set wkSht = Nothing
+    wkSht.Cells(curRow, nCol) = "订单编号"
+    wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
+    wkSht.Cells(curRow, nCol + 1) = Sn
+    wkSht.Cells(curRow, nCol + 1).HorizontalAlignment = xlCenter
+    wkSht.Rows(curRow).RowHeight = 33
+    VPP curRow
+    
+    wkSht.Cells(curRow, nCol) = "发货地址"
+    wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
+    wkSht.Rows(curRow).RowHeight = 33
+    
+    Dim Dic As New Scripting.Dictionary
+    For i = LBound(arrName) To UBound(arrName) - 1
+        str = arrName(i)
+        Dic(str) = Dic(str) + 1
+    Next
+    Dim keys, items, count As Long
+    keys = Dic.keys
+    items = Dic.items
+    For i = LBound(keys) To UBound(keys)
+        VPP curRow
+        wkSht.Cells(curRow, nCol).Resize(1, 2).Merge
+        wkSht.Cells(curRow, nCol) = keys(i)
+        wkSht.Cells(curRow, nCol).HorizontalAlignment = xlCenter
+        count = count + items(i)
+        wkSht.Cells(curRow, nCol + 2) = items(i)
+    Next
+    
+    VPP curRow
+    wkSht.Cells(curRow, nCol + 0) = "第" & index & "包"
+    wkSht.Cells(curRow, nCol + 1) = "共" & totalCount & "包"
+    wkSht.Cells(curRow, nCol + 2) = "共" & count & "块"
+    Dim Rng As Range
+    Set Rng = wkSht.Range(wkSht.Cells(LstRow, nCol), wkSht.Cells(curRow, nCol + 2))
+    Rng.Borders.LineStyle = xlContinuous
+    Rng.Borders(xlEdgeTop).Weight = xlMedium
+    Rng.Borders(xlEdgeLeft).Weight = xlMedium
+    Rng.Borders(xlEdgeBottom).Weight = xlMedium
+    Rng.Borders(xlEdgeRight).Weight = xlMedium
+    
+    For i = 0 To 2
+        wkSht.Columns(nCol + i).ColumnWidth = 15
+        wkSht.Columns(nCol + i).HorizontalAlignment = xlCenter
+        wkSht.Columns(nCol + i).VerticalAlignment = xlCenter
+    Next
+    
 End Sub
 Sub Label_PrintFinish(arr, count As Long)
     Dim wkSht As Worksheet

@@ -28,15 +28,15 @@ Public Function HasSht(wkBk As Workbook, ByVal shtName As String) As Boolean
     HasSht = bRet
     Set wkSht = Nothing
 End Function
-Public Function GetOpenFiles()
+Public Function GetSelOpenFiles()
     Dim ofd As FileDialog
     Dim ArrPath, i As Long
     Dim str
     Set ofd = ExcelApp.FileDialog(msoFileDialogFilePicker)
     With ofd
         .AllowMultiSelect = True
-        .Title = "Select files to Import"
-        .Filters.Add "Excel文档", "*.xls;*.xlsx", 1
+        .title = "Select files to Import"
+        .Filters.add "Excel文档", "*.xls;*.xlsx", 1
     End With
     If ofd.Show = -1 Then
         ReDim ArrPath(0 To ofd.SelectedItems.count - 1)
@@ -46,7 +46,7 @@ Public Function GetOpenFiles()
         Next
     End If
     Set ofd = Nothing
-    GetOpenFiles = ArrPath
+    GetSelOpenFiles = ArrPath
 End Function
 Public Function DeleteSht(wkBk As Workbook, ByVal shtName As String) As Boolean
     If HasSht(wkBk, shtName) Then
@@ -81,7 +81,7 @@ End Sub
 Public Sub InitANewSht(wkBk As Excel.Workbook, shtName As String, bVisible As Boolean)
     Dim wkSht As Worksheet
     Call DeleteSht(wkBk, shtName)
-    Set wkSht = wkBk.Worksheets.Add(After:=wkBk.Worksheets(wkBk.Worksheets.count))
+    Set wkSht = wkBk.Worksheets.add(After:=wkBk.Worksheets(wkBk.Worksheets.count))
     wkSht.Name = shtName
     If Not bVisible Then
         wkSht.Visible = Excel.xlSheetHidden
@@ -101,4 +101,41 @@ Public Function PreImport(shtName As String) As Boolean
 End Function
 Public Function GerArrLen(arr, d) As Long
     GerArrLen = UBound(arr, d) - LBound(arr, d) + 1
+End Function
+'******************************************************************************
+'函数名称：Sht_GetLstRow
+'函数描述：获取工作表的纵向最后非空单元格的行号
+'参数说明：
+'   wkBk:需要操作的工作表
+'   ArgCols：列号
+'返回值：
+'   最后非空单元格的行号
+'******************************************************************************
+Public Function Sht_GetLstRow(wkSht As Worksheet, ParamArray ArgCols()) As Long
+    Dim i As Long, nRow As Long, nCol As Long, LstRow As Long
+    For i = LBound(ArgCols) To UBound(ArgCols)
+        nCol = ArgCols(i)
+        nRow = wkSht.Cells(wkSht.Rows.count, nCol).End(xlUp).Row
+        LstRow = IIf(nRow > LstRow, nRow, LstRow)
+    Next
+    Sht_GetLstRow = LstRow
+End Function
+
+'******************************************************************************
+'函数名称：Sht_GetLstRow
+'函数描述：获取工作表的横向最后非空单元格的列号
+'参数说明：
+'   wkBk:需要操作的工作表
+'   ArgCols：行号
+'返回值：
+'   最后非空单元格的列号
+'******************************************************************************
+Public Function Sht_GetLstCol(wkSht As Worksheet, ParamArray ArgRows()) As Long
+    Dim i As Long, nRow As Long, nCol As Long, LstCol As Long
+    For i = LBound(ArgRows) To UBound(ArgRows)
+        nRow = ArgRows(i)
+        nCol = wkSht.Cells(nRow, wkSht.Columns.count).End(xlToLeft).Column
+        LstCol = IIf(nCol > LstCol, nCol, LstCol)
+    Next
+    Sht_GetLstCol = LstCol
 End Function

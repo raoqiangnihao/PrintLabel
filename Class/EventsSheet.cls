@@ -12,6 +12,7 @@ Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Private Const COL_CUR As Long = 2
+Private Const S_ROW As Long = 5
 Private WithEvents EventSheet As Excel.Worksheet
 Attribute EventSheet.VB_VarHelpID = -1
 
@@ -61,6 +62,8 @@ End Function
 '函数描述：初始化扫描结果工作表
 Public Sub ScanInit()
     Dim nRow As Long, nCol As Long
+    Dim EvtEnabled As Boolean
+    EvtEnabled = ExcelApp.EnableEvents '记录事件响应状态
     ExcelApp.EnableEvents = False
     For nRow = EventSheet.UsedRange.Rows.count To 2 Step -1
         EventSheet.Rows(nRow).Delete
@@ -69,40 +72,46 @@ Public Sub ScanInit()
         EventSheet.Columns(nCol).Delete
     Next
     EventSheet.Activate
-    EventSheet.Cells(2, 1).Select '默认开始位置为A2
-    ExcelApp.EnableEvents = True
+    EventSheet.Cells(S_ROW, 1).Select '默认开始位置为A2
+    Call InitScanInfo
+    ExcelApp.EnableEvents = EvtEnabled '恢复事件响应
 End Sub
 
 '工作表的Change事件
 Private Sub EventSheet_Change(ByVal Target As Excel.Range)
     On Error Resume Next
     ExcelApp.EnableEvents = False
-    If Target.Column <= COL_CUR And Target.Row = 1 Then
-        If Target.Column = COL_CUR Then
-            '如果选择的扫描工作簿，则将以前扫描的结果搬移过来
-            Dim RowCnt As Long, ColCnt As Long
-            Dim arr
-            Call gShtScan.ScanInit
-            ExcelApp.EnableEvents = False
-            arr = Sample_GetScannedCode
-            If IsArray(arr) Then
-                '扫描多个
-                RowCnt = GerArrLen(arr, 1)
-                ColCnt = GerArrLen(arr, 2)
-                Target.Offset(1, -1).Resize(RowCnt, ColCnt) = arr
+    '处理工作簿选择的事件
+    If Target.Column = COL_CUR And Target.Row = 1 Then
+        '如果选择的扫描工作簿，则将以前扫描的结果搬移过来
+        Dim wkSht As Worksheet
+        Dim RowCnt As Long, ColCnt As Long
+        Dim arr, Rng As Range
+        
+        Set wkSht = Target.Parent
+        Call gShtScan.ScanInit
+        arr = Sample_GetScannedCode
+        If IsArray(arr) Then
+            '扫描多个
+            RowCnt = GerArrLen(arr, 1)
+            ColCnt = GerArrLen(arr, 2)
+            Set Rng = wkSht.Cells(S_ROW + 1, COL_CUR)
+            Rng.Resize(RowCnt, ColCnt) = arr '恢复之前扫描的结果
+        Else
+            If arr <> "" Then
+                RowCnt = 1
+                Set Rng = wkSht.Cells(S_ROW, COL_CUR)
+                Rng = arr '已经扫描了一个
             Else
-                If arr <> "" Then
-                    RowCnt = 1
-                    Target.Offset(1, -1) = arr '已经扫描了一个
-                Else
-                    RowCnt = 0 '如果一个都没有扫描
-                End If
+                RowCnt = 0 '如果一个都没有扫描
             End If
-            Target.Offset(RowCnt + 1, -1).Select '选择下一个输入的位置
         End If
+        '写入相关信息
+        Call InitScanInfo
+        Target.Offset(RowCnt + 1, -1).Select '选择下一个输入的位置
         GoTo LineEnd
     End If
-    
+    '如果是正在扫描则处理扫描的事件
     If IsScanning Then
         If Target.Cells.count = 1 Then
             If Trim(Target.value) <> "" Then
@@ -114,5 +123,17 @@ Private Sub EventSheet_Change(ByVal Target As Excel.Range)
     End If
 LineEnd:
     ExcelApp.EnableEvents = True
+End Sub
+'初始化扫描文件信息
+Private Sub InitScanInfo()
+    Dim arr, RowCnt As Long, ColCnt As Long
+    Dim EvtEnabled As Boolean
+    EvtEnabled = ExcelApp.EnableEvents
+    ExcelApp.EnableEvents = False
+    arr = Sample_GetInfo
+    RowCnt = GerArrLen(arr, 1)
+    ColCnt = GerArrLen(arr, 2)
+    EventSheet.Cells(2, 1).Resize(RowCnt, ColCnt) = arr
+    ExcelApp.EnableEvents = EvtEnabled
 End Sub
 

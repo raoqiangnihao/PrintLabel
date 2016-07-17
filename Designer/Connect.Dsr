@@ -46,7 +46,8 @@ Public Function GetRibbonXML() As String
                    "<tabs>" & _
                     "<tab id=""tabPrintLabel"" label=""打印标签"">" & _
                      "<group id=""grupPrintLabel"" label=""工具"">" & _
-                      "<button id=""btnImportSample"" label=""导入样本数据"" size=""large"" imageMso=""ExportMoreMenu"" onAction=""UIImportSample"" />" & _
+                      "<button id=""btnImportSelSample"" label=""导入选择样本数据"" size=""large"" imageMso=""ExportMoreMenu"" onAction=""UIImportSelSample"" />" & _
+                      "<button id=""btnImportFolderSample"" label=""导入文件夹样本数据"" size=""large"" imageMso=""SharePointListsWorkOffline"" onAction=""UIImportFolderSample"" />" & _
                       "<button id=""btnClearScan"" label=""清除扫描数据"" size=""large"" imageMso=""InkDeleteAllInk"" onAction=""UIClearScan"" />" & _
                      "</group >" & _
                     "</tab>" & _
@@ -56,7 +57,7 @@ Public Function GetRibbonXML() As String
     GetRibbonXML = sRibbonXML
 End Function
    
-Public Sub UIImportSample(control As IRibbonControl)
+Public Sub UIImportSelSample(control As IRibbonControl)
 '    On Error Resume Next
     Dim wkSht As Excel.Worksheet
     Set wkSht = ExcelApp.ActiveSheet
@@ -66,6 +67,31 @@ Public Sub UIImportSample(control As IRibbonControl)
         Set wkSht = Nothing
         Exit Sub
     End If
+    Dim arrPaths
+    arrPaths = GetSelOpenFiles
+    Call UIImport(wkSht, arrPaths)
+End Sub
+Public Sub UIImportFolderSample(control As IRibbonControl)
+    Dim wkSht As Excel.Worksheet
+    Set wkSht = ExcelApp.ActiveSheet
+    If Not PreImport(wkSht.Name) Then
+        ShowMsg "当前工作表不能作为扫描结果，请新建一个工作表"
+        Set gShtScan = Nothing
+        Set wkSht = Nothing
+        Exit Sub
+    End If
+    Dim SelDir As String
+    Dim arrPaths
+    SelDir = Fbd_GetSelDir
+    arrPaths = Fso_GetDirFiles(SelDir, ".xlsx")
+    If UBound(arrPaths) > 0 Then
+        ReDim Preserve arrPaths(LBound(arrPaths) To UBound(arrPaths) - 1) As String
+        Call UIImport(wkSht, arrPaths)
+    End If
+    
+End Sub
+
+Private Sub UIImport(wkSht As Worksheet, arrPaths)
     If Not gBk Is Nothing Then
         Set gBk = Nothing
     End If
@@ -78,7 +104,7 @@ Public Sub UIImportSample(control As IRibbonControl)
     Dim bSucess As Boolean
     
     ExcelApp.ScreenUpdating = False
-    bSucess = Sample_ImportData
+    bSucess = Sample_ImportData(arrPaths)
     If bSucess Then
         Call Label_Init
         Call gShtScan.ScanInit
@@ -90,6 +116,9 @@ Public Sub UIImportSample(control As IRibbonControl)
         Call ShowMsg("导入失败")
     End If
 End Sub
+
+
+
 Sub UIClearScan(control As IRibbonControl)
     If Not gShtScan Is Nothing Then
         Call gShtScan.ScanInit
