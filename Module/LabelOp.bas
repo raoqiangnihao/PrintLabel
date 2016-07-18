@@ -7,18 +7,24 @@ Sub Label_Init()
     Call InitANewSht(gBk, SHT_LABEL, True)
     Call SaveLstNum("")
 End Sub
-Sub Label_Print(arrName, Sn As String, index As Long, totalCount As Long)
+Sub Label_Print(arrName, ByVal Sn As String, ByVal productName As String, index As Long, totalCount As Long)
     Dim wkSht As Worksheet
     Dim curRow As Long, LstRow As Long, i As Long, nCol As Long
     Dim str As String
     nCol = 1
     Set wkSht = gBk.Worksheets(SHT_LABEL)
     LstRow = Sht_GetLstRow(wkSht, nCol)
-    
-    LstRow = LstRow + IIf(index = 1, 5, 3)
-    
+    str = wkSht.Cells(LstRow, nCol)
+    '如果是第一行，且为空，则表示是第一次打印
+    If Not (LstRow = 1 And str = "") Then
+        LstRow = LstRow + 3
+    End If
     curRow = LstRow
-
+    If curRow <> 1 Then
+        wkSht.HPageBreaks.add wkSht.Cells(curRow, nCol)
+    Else
+        wkSht.VPageBreaks.add wkSht.Cells(curRow, 4)
+    End If
     wkSht.Cells(curRow, nCol) = "订单编号"
     wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
     wkSht.Cells(curRow, nCol + 1) = Sn
@@ -26,6 +32,12 @@ Sub Label_Print(arrName, Sn As String, index As Long, totalCount As Long)
     wkSht.Rows(curRow).RowHeight = 33
     VPP curRow
     
+    wkSht.Cells(curRow, nCol) = "产品类别"
+    wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
+    wkSht.Cells(curRow, nCol + 1) = productName
+    wkSht.Cells(curRow, nCol + 1).HorizontalAlignment = xlCenter
+    wkSht.Rows(curRow).RowHeight = 33
+    VPP curRow
     wkSht.Cells(curRow, nCol) = "发货地址"
     wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
     wkSht.Rows(curRow).RowHeight = 33
@@ -64,7 +76,9 @@ Sub Label_Print(arrName, Sn As String, index As Long, totalCount As Long)
         wkSht.Columns(nCol + i).HorizontalAlignment = xlCenter
         wkSht.Columns(nCol + i).VerticalAlignment = xlCenter
     Next
-    
+    Dim PrintPage As Long
+    PrintPage = wkSht.PageSetup.Pages.count
+    wkSht.PrintOut From:=PrintPage, To:=PrintPage
 End Sub
 Sub Label_PrintFinish(arr, count As Long)
     Dim wkSht As Worksheet

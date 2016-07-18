@@ -353,7 +353,7 @@ Private Sub PrintAllLabel()
         str = ArrLabel(nRow, LBound(ArrLabel, 2))
         If VBA.LCase(str) = SYMBOL_END Then
             '如果遇到end，则打印之前的条码
-            Call Label_Print(arrName, orderSn, index, count)
+            Call Label_Print(arrName, orderSn, wkSht.Cells(4, CurCol + 1), index, count)
             ReDim arrCode(0) As String
             ReDim arrName(0) As String
             VPP index
@@ -374,7 +374,7 @@ Private Sub PrintAllLabel()
     str = ArrLabel(UBound(ArrLabel, 1), LBound(ArrLabel, 2))
     If VBA.LCase(str) <> SYMBOL_END Then
         '如果遇到end，则打印之前的条码
-        Call Label_Print(arrName, orderSn, index, count)
+        Call Label_Print(arrName, orderSn, wkSht.Cells(4, CurCol + 1), index, count)
         ReDim arrCode(0) As String
         ReDim arrName(0) As String
     End If
