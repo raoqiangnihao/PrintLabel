@@ -12,7 +12,7 @@ Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Private Const COL_CUR As Long = 2
-Private Const S_ROW As Long = 5
+Private Const S_ROW As Long = 6
 Private Const COL_EVT As Long = 5
 Private WithEvents EventSheet As Excel.Worksheet
 Attribute EventSheet.VB_VarHelpID = -1
@@ -124,7 +124,7 @@ Public Sub InitScanInfo()
     RowCnt = GerArrLen(arr, 1)
     ColCnt = GerArrLen(arr, 2)
     EventSheet.Cells(2, 1).Resize(RowCnt, ColCnt) = arr
-    EventSheet.Cells(5, COL_EVT) = "开始扫描"
+    EventSheet.Cells(6, COL_EVT) = "开始扫描"
     EventSheet.Columns(COL_EVT).AutoFit
     EventSheet.Columns(COL_EVT).HorizontalAlignment = xlCenter
     LstRow = Sht_GetLstRow(EventSheet, COL_EVT) + 1

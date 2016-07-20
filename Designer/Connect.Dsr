@@ -25,6 +25,7 @@ Option Explicit
 Implements IRibbonExtensibility '添加对 IRibbonExtensibility 接口的引用
 Private Sub AddinInstance_OnConnection(ByVal Application As Object, ByVal ConnectMode As AddInDesignerObjects.ext_ConnectMode, ByVal AddInInst As Object, custom() As Variant)
     Set ExcelApp = Application
+    SftVer = App.Major & "." & App.Minor & "." & App.Revision
 End Sub
 
 Private Sub AddinInstance_OnDisconnection(ByVal RemoveMode As AddInDesignerObjects.ext_DisconnectMode, custom() As Variant)

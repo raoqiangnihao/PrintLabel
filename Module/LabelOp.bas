@@ -1,13 +1,13 @@
 Attribute VB_Name = "LabelOp"
 Option Explicit
-Private Const SHT_LABEL As String = "标签"
+Public Const SHT_LABEL As String = "标签"
 Private Const SPLIT_CHR As String = "-"
 Private Const COL_FINISHED As Long = 4
 Sub Label_Init()
     Call InitANewSht(gBk, SHT_LABEL, True)
     Call SaveLstNum("")
 End Sub
-Sub Label_Print(arrName, ByVal Sn As String, ByVal productName As String, index As Long, totalCount As Long)
+Sub Label_Print(arrName, ByVal Sn As String, ByVal productName As String, dstPlace As String, index As Long, totalCount As Long)
     Dim wkSht As Worksheet
     Dim curRow As Long, LstRow As Long, i As Long, nCol As Long
     Dim str As String
@@ -30,16 +30,25 @@ Sub Label_Print(arrName, ByVal Sn As String, ByVal productName As String, index 
     wkSht.Cells(curRow, nCol + 1) = Sn
     wkSht.Cells(curRow, nCol + 1).HorizontalAlignment = xlCenter
     wkSht.Rows(curRow).RowHeight = 33
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Bold = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Size = 13
     VPP curRow
     
     wkSht.Cells(curRow, nCol) = "产品类别"
     wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
     wkSht.Cells(curRow, nCol + 1) = productName
     wkSht.Cells(curRow, nCol + 1).HorizontalAlignment = xlCenter
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Bold = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Size = 13
     wkSht.Rows(curRow).RowHeight = 33
+    
     VPP curRow
     wkSht.Cells(curRow, nCol) = "发货地址"
     wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
+    wkSht.Cells(curRow, nCol + 1) = dstPlace
+    wkSht.Cells(curRow, nCol + 1).WrapText = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Bold = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Size = 13
     wkSht.Rows(curRow).RowHeight = 33
     
     Dim Dic As New Scripting.Dictionary
@@ -63,6 +72,9 @@ Sub Label_Print(arrName, ByVal Sn As String, ByVal productName As String, index 
     wkSht.Cells(curRow, nCol + 0) = "第" & index & "包"
     wkSht.Cells(curRow, nCol + 1) = "共" & totalCount & "包"
     wkSht.Cells(curRow, nCol + 2) = "共" & count & "块"
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Bold = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Size = 13
+    
     Dim Rng As Range
     Set Rng = wkSht.Range(wkSht.Cells(LstRow, nCol), wkSht.Cells(curRow, nCol + 2))
     Rng.Borders.LineStyle = xlContinuous

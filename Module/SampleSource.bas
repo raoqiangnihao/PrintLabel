@@ -1,11 +1,11 @@
 Attribute VB_Name = "SampleSource"
 Option Explicit
-Private Const SHT_SAMPLE As String = "src_sample"
+Public Const SHT_SAMPLE As String = "src_sampleV1.3.3"
 Private Const SYMBOL_END As String = "end"
 Private Const SYMBOL_OK As String = "ok"
-Private Const COl_DEPART As Long = 6
-Private Const COL_SCANNED As Long = 4
-Private Const ROW_SCANNED As Long = 6
+Private Const COl_DEPART As Long = 6 '两个工作簿源相隔列数
+Private Const COL_SCANNED As Long = 4 '扫描列队工作簿所在列的距离
+Private Const ROW_SCANNED As Long = 7 '扫描记录开始行
 
 Sub Sample_Init()
     Call InitANewSht(gBk, SHT_SAMPLE, False)
@@ -41,11 +41,18 @@ Public Function Sample_ImportData(Paths) As Boolean
                     ShtDst.Cells(VPP(curRow), CurCol) = wkBk.Name
                     ShtDst.Cells(curRow, CurCol) = "订单编号："
                     ShtDst.Cells(VPP(curRow), CurCol + 1) = ShtSrc.Cells(2, "B")
+                    
                     ShtDst.Cells(curRow, CurCol) = "经销店面："
                     ShtDst.Cells(VPP(curRow), CurCol + 1) = ShtSrc.Cells(3, "B")
+                    
                     ShtDst.Cells(curRow, CurCol) = "产品类别："
                     str = ShtSrc.Cells(3, "K")
                     ShtDst.Cells(VPP(curRow), CurCol + 1) = Trim(IIf(Len(str) > 5, Right(str, Len(str) - 5), str))
+                    
+                    str = ShtSrc.Cells(3, "C")
+                    ShtDst.Cells(curRow, CurCol + 0) = "终端客户"
+                    ShtDst.Cells(VPP(curRow), CurCol + 1) = Trim(IIf(Len(str) > 5, Right(str, Len(str) - 5), str))
+                    
                     ShtDst.Cells(curRow, CurCol + 0) = "正面条码"
                     ShtDst.Cells(curRow, CurCol + 1) = "样板名称"
                     ShtDst.Cells(curRow, CurCol + 2) = "是否扫描"
@@ -53,6 +60,7 @@ Public Function Sample_ImportData(Paths) As Boolean
                     ShtDst.Cells(curRow, CurCol + COL_SCANNED) = "扫描顺序"
                     ShtDst.Cells(curRow + 1, CurCol + COL_SCANNED) = SYMBOL_END
                     Call VPP(curRow)
+                    
                     nCol = Rng.Column
                     
                     LstRow = ShtSrc.Cells(ShtSrc.Rows.count, nCol).End(xlUp).Row
@@ -200,7 +208,7 @@ Private Function CheckFinished(wkSht As Worksheet, str As String, ByVal nCol As 
         Rng.Offset(0, 2) = True
         LstRow = wkSht.Cells(wkSht.Rows.count, Rng.Column).End(xlUp).Row
         Dim arr
-        arr = wkSht.Range(wkSht.Cells(6, nCol + 2), wkSht.Cells(LstRow, nCol + 2))
+        arr = wkSht.Range(wkSht.Cells(ROW_SCANNED, nCol + 2), wkSht.Cells(LstRow, nCol + 2))
         If IsArray(arr) Then
             If ArrIsAllValue(arr, True) Then
                 CheckFinished = True
@@ -353,7 +361,7 @@ Private Sub PrintAllLabel()
         str = ArrLabel(nRow, LBound(ArrLabel, 2))
         If VBA.LCase(str) = SYMBOL_END Then
             '如果遇到end，则打印之前的条码
-            Call Label_Print(arrName, orderSn, wkSht.Cells(4, CurCol + 1), index, count)
+            Call Label_Print(arrName, orderSn, wkSht.Cells(4, CurCol + 1), wkSht.Cells(5, CurCol + 1), index, count)
             ReDim arrCode(0) As String
             ReDim arrName(0) As String
             VPP index
@@ -374,7 +382,7 @@ Private Sub PrintAllLabel()
     str = ArrLabel(UBound(ArrLabel, 1), LBound(ArrLabel, 2))
     If VBA.LCase(str) <> SYMBOL_END Then
         '如果遇到end，则打印之前的条码
-        Call Label_Print(arrName, orderSn, wkSht.Cells(4, CurCol + 1), index, count)
+        Call Label_Print(arrName, orderSn, wkSht.Cells(4, CurCol + 1), wkSht.Cells(5, CurCol + 1), index, count)
         ReDim arrCode(0) As String
         ReDim arrName(0) As String
     End If

@@ -84,7 +84,7 @@ Public Sub InitANewSht(wkBk As Excel.Workbook, shtName As String, bVisible As Bo
     Set wkSht = wkBk.Worksheets.add(After:=wkBk.Worksheets(wkBk.Worksheets.count))
     wkSht.Name = shtName
     If Not bVisible Then
-        wkSht.Visible = Excel.xlSheetHidden
+        wkSht.Visible = Excel.xlVeryHidden
     End If
     Set wkSht = Nothing
 End Sub
