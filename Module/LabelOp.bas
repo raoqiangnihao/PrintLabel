@@ -92,6 +92,62 @@ Sub Label_Print(arrName, ByVal Sn As String, ByVal productName As String, dstPla
     PrintPage = wkSht.PageSetup.Pages.count
     wkSht.PrintOut From:=PrintPage, To:=PrintPage
 End Sub
+
+Sub Label_PrintFinal(ByVal Sn As String, ByVal productName As String, dstPlace As String, totalPackage As Long, totalCount As Long)
+    Dim wkSht As Worksheet, str As String
+    Dim curRow As Long, LstRow As Long, nCol As Long
+    nCol = 1
+    Set wkSht = gBk.Worksheets(SHT_LABEL)
+    LstRow = Sht_GetLstRow(wkSht, nCol) + 3
+    curRow = LstRow
+    wkSht.HPageBreaks.add wkSht.Cells(curRow, nCol)
+    
+    wkSht.Cells(curRow, nCol) = "订单编号"
+    wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
+    wkSht.Cells(curRow, nCol + 1) = Sn
+    wkSht.Cells(curRow, nCol + 1).HorizontalAlignment = xlCenter
+    wkSht.Rows(curRow).RowHeight = 33
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Bold = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Size = 13
+    
+    VPP curRow
+    wkSht.Cells(curRow, nCol) = "产品类别"
+    wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
+    wkSht.Cells(curRow, nCol + 1) = productName
+    wkSht.Cells(curRow, nCol + 1).HorizontalAlignment = xlCenter
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Bold = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Size = 13
+    wkSht.Rows(curRow).RowHeight = 33
+    
+    VPP curRow
+    wkSht.Cells(curRow, nCol) = "发货地址"
+    wkSht.Cells(curRow, nCol + 1).Resize(1, 2).Merge
+    wkSht.Cells(curRow, nCol + 1) = dstPlace
+    wkSht.Cells(curRow, nCol + 1).WrapText = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Bold = True
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Size = 13
+    wkSht.Rows(curRow).RowHeight = 33
+    
+    VPP curRow
+    str = "共 " & totalPackage & " 包 共 " & totalCount & " 块"
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Merge
+    wkSht.Cells(curRow, nCol) = str
+    wkSht.Cells(curRow, nCol).Font.Bold = True
+    wkSht.Cells(curRow, nCol).Font.Size = 13
+    
+    Dim Rng As Range
+    Set Rng = wkSht.Range(wkSht.Cells(LstRow, nCol), wkSht.Cells(curRow, nCol + 2))
+    Rng.Borders.LineStyle = xlContinuous
+    Rng.Borders(xlEdgeTop).Weight = xlMedium
+    Rng.Borders(xlEdgeLeft).Weight = xlMedium
+    Rng.Borders(xlEdgeBottom).Weight = xlMedium
+    Rng.Borders(xlEdgeRight).Weight = xlMedium
+    
+    Dim PrintPage As Long
+    PrintPage = wkSht.PageSetup.Pages.count
+    wkSht.PrintOut From:=PrintPage, To:=PrintPage
+    
+End Sub
 Sub Label_PrintFinish(arr, count As Long)
     Dim wkSht As Worksheet
     Dim LstRow As Long, RowCnt As Long, ColCnt As Long

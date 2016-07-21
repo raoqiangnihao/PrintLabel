@@ -336,6 +336,7 @@ Private Sub PrintAllLabel()
     Dim nRow As Long
     Dim wkSht As Worksheet
     Dim Rng As Range
+    Dim nCount As Long
     
     Set wkSht = gBk.Worksheets(SHT_SAMPLE)
     CurCol = GetCurHandleCol(wkSht)
@@ -349,6 +350,8 @@ Private Sub PrintAllLabel()
         str = ArrLabel(nRow, LBound(ArrLabel, 2))
         If VBA.LCase(str) = SYMBOL_END Then
             VPP count
+        Else
+            VPP nCount
         End If
         If nRow = UBound(ArrLabel, 1) And VBA.LCase(str) <> SYMBOL_END Then
             VPP count '最后一次情况
@@ -386,5 +389,6 @@ Private Sub PrintAllLabel()
         ReDim arrCode(0) As String
         ReDim arrName(0) As String
     End If
+    Call Label_PrintFinal(orderSn, wkSht.Cells(4, CurCol + 1), wkSht.Cells(5, CurCol + 1), count, nCount)
 End Sub
 
