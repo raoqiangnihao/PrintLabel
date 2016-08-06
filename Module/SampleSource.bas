@@ -153,14 +153,13 @@ Public Function Sample_AddScanResult(ByVal str As String) As Boolean
     bPrint = False: bFinished = False
     If VBA.LCase(str) = SYMBOL_END Then
         '如果是出现了end，则打印标签
-        'bPrint = True
+        bPrint = True
         '出现end不打印标签，等待整个文件扫描完成后再打印
     Else
         '如果不是end，需要检测是否扫描完
         If CheckFinished(wkSht, str, CurCol) Then
-            
-            bPrint = True
             bFinished = True
+            bPrint = True
             Call VPP(LstRow) '如果是扫描完成，则需要下移一行
             Dim msg As String
             msg = "已经扫描完一个工作簿" & Chr(10) & _
@@ -169,6 +168,14 @@ Public Function Sample_AddScanResult(ByVal str As String) As Boolean
         End If
     End If
     If bPrint Then
+        '如果扫描到End则打印一个
+        Call PrintEndLabel
+    End If
+        
+        
+    
+    If bFinished Then
+        '如果扫描完成后，则打印全部的标签
         Call PrintAllLabel
         gShtScan.InitScanInfo
     End If
@@ -390,5 +397,62 @@ Private Sub PrintAllLabel()
         ReDim arrName(0) As String
     End If
     Call Label_PrintFinal(orderSn, wkSht.Cells(4, CurCol + 1), wkSht.Cells(5, CurCol + 1), count, nCount)
+End Sub
+Private Sub PrintEndLabel()
+    Dim ArrLabel
+    Dim arrCode
+    Dim arrName
+    Dim str As String, orderSn As String
+    Dim index As Long, count As Long, ScanCol As Long, CurCol As Long
+    Dim nRow As Long, i As Long, endRow As Long
+    Dim wkSht As Worksheet
+    Dim Rng As Range
+    Dim nCount As Long
+    
+    Set wkSht = gBk.Worksheets(SHT_SAMPLE)
+    CurCol = GetCurHandleCol(wkSht)
+    ScanCol = CurCol + COL_SCANNED
+    orderSn = wkSht.Cells(2, CurCol + 1)
+    '获取全部的扫描的条码
+    ArrLabel = GetDisCode(wkSht, ScanCol)
+    
+    '统计有几包
+    For nRow = LBound(ArrLabel, 1) To UBound(ArrLabel, 1)
+        str = ArrLabel(nRow, LBound(ArrLabel, 2))
+        If VBA.LCase(str) = SYMBOL_END Then
+            VPP count
+        Else
+            VPP nCount
+        End If
+        If nRow = UBound(ArrLabel, 1) And VBA.LCase(str) <> SYMBOL_END Then
+            VPP count '最后一次情况
+        End If
+    Next
+    
+    For i = UBound(ArrLabel, 1) - 1 To LBound(ArrLabel, 1) Step -1
+        str = ArrLabel(i, LBound(ArrLabel, 2))
+        If VBA.LCase(str) = SYMBOL_END Then
+            Exit For
+        End If
+    Next
+
+    index = count
+    count = 0
+    ReDim arrCode(0) As String
+    ReDim arrName(0) As String
+    str = ArrLabel(UBound(ArrLabel, 1), LBound(ArrLabel, 1))
+    If VBA.LCase(str) = SYMBOL_END Then
+        endRow = UBound(ArrLabel, 1) - 1
+    Else
+        endRow = UBound(ArrLabel, 1)
+    End If
+    For nRow = i + 1 To endRow '最后一个是end，不需要打印
+        arrCode(UBound(arrCode)) = str
+        arrName(UBound(arrName)) = ArrLabel(nRow, LBound(ArrLabel, 2) + 1)
+        ReDim Preserve arrCode(LBound(arrCode) To UBound(arrCode) + 1) As String
+        ReDim Preserve arrName(LBound(arrName) To UBound(arrName) + 1) As String
+    Next
+    Call Label_Print(arrName, orderSn, wkSht.Cells(4, CurCol + 1), wkSht.Cells(5, CurCol + 1), index, count)
+    
 End Sub
 

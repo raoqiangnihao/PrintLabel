@@ -57,23 +57,33 @@ Sub Label_Print(arrName, ByVal Sn As String, ByVal productName As String, dstPla
         Dic(str) = Dic(str) + 1
     Next
     Dim keys, items, count As Long
-    keys = Dic.keys
-    items = Dic.items
+    keys = Dic.keys '扫描的内容
+    items = Dic.items '个数
+    str = ""
     For i = LBound(keys) To UBound(keys)
-        VPP curRow
-        wkSht.Cells(curRow, nCol).Resize(1, 2).Merge
-        wkSht.Cells(curRow, nCol) = keys(i)
-        wkSht.Cells(curRow, nCol).HorizontalAlignment = xlCenter
+        str = str & keys(i) & "-" & items(i) & " "
         count = count + items(i)
-        wkSht.Cells(curRow, nCol + 2) = items(i)
     Next
     
     VPP curRow
+    wkSht.Cells(curRow, nCol).Resize(1, 3).Merge
+    wkSht.Cells(curRow, nCol) = str
+    wkSht.Cells(curRow, nCol).HorizontalAlignment = xlCenter
+    wkSht.Rows(curRow).RowHeight = 100
+    
+    VPP curRow
     wkSht.Cells(curRow, nCol + 0) = "第" & index & "包"
-    wkSht.Cells(curRow, nCol + 1) = "共" & totalCount & "包"
+    If totalCount = 0 Then
+        wkSht.Cells(curRow, nCol + 1) = "共  包"
+    Else
+        wkSht.Cells(curRow, nCol + 1) = "共" & totalCount & "包"
+    End If
+
     wkSht.Cells(curRow, nCol + 2) = "共" & count & "块"
     wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Bold = True
     wkSht.Cells(curRow, nCol).Resize(1, 3).Font.Size = 13
+    
+    
     
     Dim Rng As Range
     Set Rng = wkSht.Range(wkSht.Cells(LstRow, nCol), wkSht.Cells(curRow, nCol + 2))
